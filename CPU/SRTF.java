@@ -1,7 +1,7 @@
 package CPU;
 import java.util.*;
 
-class Main
+class SRTF
 {
     public static void main(String args[])
     {

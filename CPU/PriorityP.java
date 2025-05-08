@@ -2,7 +2,7 @@ package CPU;
 
 import java.util.*;
 
-class Main
+class PriorityP
 {
     public static void main(String args[])
     {
