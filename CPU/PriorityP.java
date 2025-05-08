@@ -1,11 +1,12 @@
 package CPU;
+
 import java.util.*;
 
 class Main
 {
     public static void main(String args[])
     {
-        Scanner ob = new Scanner(System.in);
+         Scanner ob = new Scanner(System.in);
         
         // Input: Number of processes
         System.out.print("Enter number of processes: ");
@@ -20,13 +21,19 @@ class Main
         int ct[] = new int[n]; // Completion Time
         int tat[] = new int[n]; // Turnaround Time
         int wt[] = new int[n];  // Waiting Time
+        int rt[] = new int[n];  // Remaining Time for preemptive execution
         
-        // Array to track whether process is completed
-        boolean isCompleted[]= new boolean [n];
+        // Arrays to track process completion and first execution time
+        boolean isCompleted[]= new boolean [n]; // Marks whether process has completed
+        boolean firstTime[]= new boolean [n];   // Marks whether process has started first time
+        
         for(int i=0;i< n;i++)
-            isCompleted[i]= false;
-        
-        // Input Arrival time, Burst time and Priority for each process
+        {
+            firstTime[i]= true;     // Initialize all processes as not started
+            isCompleted[i]= false;  // Initialize all processes as not completed
+        }
+            
+        // Input Arrival time, Burst time, Priority for each process
         for (int i = 0; i < n; i++) 
         {
             p[i] = i + 1;
@@ -36,22 +43,25 @@ class Main
             bt[i] = ob.nextInt();
             System.out.print("Enter priority (low no. = high priority) for Process " + p[i] + ":  ");
             pri[i] = ob.nextInt();
+            
+            rt[i]= bt[i];  // Initialize remaining time as burst time
         }
         
-        // Initialize counters and total time variables
+        // Initialize counters and accumulators
         int count=0, currentTime=0;
         float total_tat=0, total_wt=0;
         
-        // Non-preemptive Priority Scheduling loop (lower priority number = higher priority)
-        while ( count !=n )
+        // Preemptive Priority Scheduling loop
+        while ( count < n)
         {
-            int idx=-1, min_pri= 9999;
+            int idx=-1, min_pri=-1;
             // Find process with the highest priority (lowest priority number)
-            for(int i=0;i< n;i++)
+            for (int i=0;i < n;i++)
             {
-                if(!isCompleted[i] && at[i] <= currentTime)
+                if( !isCompleted[i] && at[i]<=currentTime )
                 {
-                    if(pri[i] < min_pri)
+                    // Select process with higher priority (greater pri[i] in this logic)
+                    if(pri[i] > min_pri)
                     {
                         min_pri= pri[i];
                         idx=i;
@@ -59,29 +69,37 @@ class Main
                 }
             }
             
-            // If no process is available to execute, increment time
-            if(idx==-1)
+            // If no process has arrived, increment current time
+            if(idx == -1)
                 currentTime++;
-            
             else
             {
-                // Calculate timings for the selected process
-                st[idx]= currentTime;              // Start time
-                ct[idx]= st[idx]+ bt[idx];         // Completion time
-                tat[idx]= ct[idx]-at[idx];         // Turnaround time = CT - AT
-                wt[idx]= tat[idx] - bt[idx];       // Waiting time = TAT - BT
+                // If process runs for the first time, record start time
+                if(firstTime[idx])
+                {
+                    st[idx]= currentTime;
+                    firstTime[idx]= false;
+                }
                 
-                // Update total turnaround time and waiting time
-                total_tat += tat[idx];
-                total_wt += wt[idx];
+                rt[idx]--;      // Execute process for 1 unit of time
+                currentTime++;  // Move time forward by 1
                 
-                currentTime = ct[idx];             // Advance current time
-                count++;                           // Increase completed process count
-                isCompleted[idx]= true;            // Mark process as completed
+                // If process finishes execution
+                if(rt[idx] == 0 )
+                {
+                    ct[idx]= currentTime;               // Completion time
+                    tat[idx]= ct[idx]- at[idx];         // Turnaround time = CT - AT
+                    wt[idx]= tat[idx]- bt[idx];         // Waiting time = TAT - BT
+                    
+                    total_tat += tat[idx];              // Accumulate total turnaround time
+                    total_wt += wt[idx];                // Accumulate total waiting time
+                    isCompleted[idx]= true;             // Mark process as completed
+                    count++;                            // Increment count of completed processes
+                }
             }
         }
         
-        // Output table of process timings
+        // Output table of process information
         System.out.println("\nProcess\tAT\tBT\tPri\tCT\tTAT\tWT");
         for (int i = 0; i < n; i++) 
         {
@@ -103,5 +121,5 @@ class Main
         }
 
         ob.close();  // Close scanner
-    }
+    }    
 }
